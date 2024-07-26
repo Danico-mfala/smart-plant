@@ -14,7 +14,7 @@ export default function HomeScreen() {
         }}
       >
         <CustomBottom
-          onPress={() => router.push("/plant")}
+          onPress={() => router.push("/Login")}
           title="Get started"
         />
       </View>
