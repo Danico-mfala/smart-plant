@@ -8,9 +8,16 @@ interface CustomBottomProps {
     containerStyles?: string;
 }
 
-const CustomBottom = ({ onPress, title, textStyles = "", containerStyles = "" }: CustomBottomProps) => {
+const CustomBottom = ({
+    onPress,
+    title,
+    textStyles = "",
+    containerStyles = "" }: CustomBottomProps) => {
     return (
-        <TouchableOpacity activeOpacity={0.7}>
+        <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={onPress}
+        >
             <Text>{title}</Text>
         </TouchableOpacity>
     )
