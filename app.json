@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "mycoolredirect",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/smart-grow-logo@3x.jpg",

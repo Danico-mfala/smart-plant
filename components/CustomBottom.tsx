@@ -27,7 +27,7 @@ const CustomBottom = ({
 const styles = StyleSheet.create({
     button: {
 
-        width: 300,
+        width: 370,
         height: 50,
         borderRadius: 7,
         backgroundColor: '#399918',

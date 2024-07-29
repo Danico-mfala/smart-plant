@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
 import CustomButton from '../components/CustomBottom';
-import firebase from 'firebase/app';
-import 'firebase/auth';
-import { router } from 'expo-router';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../config/firebaseConfig'; // Ensure correct path
+import { useRouter } from 'expo-router';
 
-const SignUp = ({ navigation }) => {
+const SignUp = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const router = useRouter();
 
     const handleSignUp = async () => {
         if (password !== confirmPassword) {
@@ -17,10 +18,10 @@ const SignUp = ({ navigation }) => {
         }
 
         try {
-            await firebase.auth().createUserWithEmailAndPassword(email, password);
-            Alert.alert('User Created', 'Your account has been created successfully!');
-            navigation.navigate('Login');
-        } catch (error) {
+            await createUserWithEmailAndPassword(auth, email, password);
+            Alert.alert('Success', 'Your account has been created successfully!');
+            router.push('/Login');
+        } catch (error: any) {
             Alert.alert('Sign Up Error', error.message);
         }
     };
@@ -58,7 +59,7 @@ const SignUp = ({ navigation }) => {
             <CustomButton title="Sign Up" onPress={handleSignUp} />
             <View style={styles.loginContainer}>
                 <Text style={styles.loginText}>Already have an account?</Text>
-                <TouchableOpacity onPress={() => router.push('Login')}>
+                <TouchableOpacity onPress={() => router.push('/Login')}>
                     <Text style={styles.loginLink}>Login</Text>
                 </TouchableOpacity>
             </View>
@@ -91,14 +92,16 @@ const styles = StyleSheet.create({
     },
     loginContainer: {
         flexDirection: 'row',
-        marginTop: 20,
+        marginTop: 30,
     },
     loginText: {
         marginRight: 5,
         color: '#888',
+        fontSize: 18
     },
     loginLink: {
         color: '#399918',
+        fontSize: 18
     },
 });
 

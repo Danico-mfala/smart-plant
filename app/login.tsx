@@ -1,27 +1,45 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
-import CustomButton from "../components/CustomBottom";
-import { router } from 'expo-router';
+import { useState } from "react";
+import { useRouter } from "expo-router";
+import { StyleSheet, View, Text, TextInput, Button, Alert, TouchableOpacity } from "react-native";
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../config/firebaseConfig'; // Ensure correct path
+import CustomBottom from "../components/CustomBottom";
 
-const Login = ({ navigation }) => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+export default function Login() {
+    const router = useRouter();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
 
-    const handleLogin = () => {
-        console.log('Login');
-        // Add your login logic here
+    const handleLogin = async () => {
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            router.push("/Plant");
+        } catch (error: any) {
+            console.error("Error logging in: ", error);
+            Alert.alert("Login Failed", error.message);
+        }
     };
+
+
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Welcome Back</Text>
+            <View style={{ marginBottom: 30 }} >
+
+                <TouchableOpacity onPress={() => router.push('./index')}>
+                    <Text>Back</Text>
+                </TouchableOpacity>
+            </View>
+
+
+            <Text style={styles.title}>Login</Text>
             <TextInput
                 style={styles.input}
-                placeholder="Username"
-                value={username}
-                onChangeText={setUsername}
+                placeholder="Email"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
                 autoCapitalize="none"
-                autoCorrect={false}
             />
             <TextInput
                 style={styles.input}
@@ -30,61 +48,50 @@ const Login = ({ navigation }) => {
                 onChangeText={setPassword}
                 secureTextEntry
                 autoCapitalize="none"
-                autoCorrect={false}
             />
-            <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-                <Text style={styles.forgotPassword}>Forgot Password?</Text>
-            </TouchableOpacity>
-            <CustomButton title="Login" onPress={handleLogin} />
-            <View style={styles.signupContainer}>
-                <Text style={styles.signupText}>Don't have an account?</Text>
-                <TouchableOpacity onPress={() => router.push('SignUp')}>
-                    <Text style={styles.signupLink}>Sign Up</Text>
+            <CustomBottom onPress={handleLogin} title="Login" />
+
+            <View style={styles.loginContainer}>
+                <Text style={styles.loginText}>don't have an account?</Text>
+                <TouchableOpacity onPress={() => router.push('/SignUp')}>
+                    <Text style={styles.loginLink}>Sign up</Text>
                 </TouchableOpacity>
             </View>
         </View>
     );
-};
+}
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+        justifyContent: "center",
+        alignItems: "center",
         padding: 20,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#fff',
     },
     title: {
         fontSize: 24,
-        fontWeight: 'bold',
+        fontWeight: "bold",
         marginBottom: 20,
+        color: '#333',
     },
     input: {
         width: '100%',
-        height: 40,
-        backgroundColor: '#fff',
-        borderRadius: 5,
-        paddingHorizontal: 10,
-        marginBottom: 15,
+        padding: 15,
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: '#ccc',
+        borderRadius: 5,
+        marginBottom: 15,
     },
-    forgotPassword: {
-        alignSelf: 'flex-end',
-        marginBottom: 20,
-        color: '#007BFF',
-    },
-    signupContainer: {
+    loginContainer: {
         flexDirection: 'row',
         marginTop: 20,
     },
-    signupText: {
+    loginText: {
         marginRight: 5,
         color: '#888',
     },
-    signupLink: {
-        color: '#399918',
+    loginLink: {
+        color: '#007BFF',
     },
 });
-
-export default Login;
