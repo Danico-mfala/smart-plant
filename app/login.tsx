@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useRouter } from "expo-router";
-import { StyleSheet, View, Text, TextInput, Button, Alert, TouchableOpacity } from "react-native";
+import { StyleSheet, View, Text, TextInput, Alert, TouchableOpacity } from "react-native";
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebaseConfig'; // Ensure correct path
 import CustomBottom from "../components/CustomBottom";
@@ -20,17 +20,13 @@ export default function Login() {
         }
     };
 
-
-
     return (
         <View style={styles.container}>
             <View style={{ marginBottom: 30 }} >
-
-                <TouchableOpacity onPress={() => router.push('./index')}>
+                <TouchableOpacity onPress={() => router.push("/")}>
                     <Text>Back</Text>
                 </TouchableOpacity>
             </View>
-
 
             <Text style={styles.title}>Login</Text>
             <TextInput
@@ -90,8 +86,10 @@ const styles = StyleSheet.create({
     loginText: {
         marginRight: 5,
         color: '#888',
+        fontSize: 18
     },
     loginLink: {
-        color: '#007BFF',
+        color: '#399918',
+        fontSize: 18
     },
 });

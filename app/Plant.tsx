@@ -1,117 +1,113 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Button, Alert, TextInput, TouchableOpacity, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Switch } from 'react-native';
 import { signOut } from 'firebase/auth';
-import { auth } from '../config/firebaseConfig';
+import { ref, set } from 'firebase/database';
+import { auth, database } from '../config/firebaseConfig'; // Ensure correct path
+import { router } from 'expo-router';
 
 const Plant = () => {
-    const [plantName, setPlantName] = useState('');
-    const [waterAmount, setWaterAmount] = useState('');
-    const [plantStatus, setPlantStatus] = useState('');
-    const router = useRouter();
+    const [soilMoisture, setSoilMoisture] = useState('');
+    const [temperature, setTemperature] = useState('');
+    const [wateringSchedule, setWateringSchedule] = useState(''); // e.g., 'daily', 'weekly'
+    const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
-    useEffect(() => {
-        // Fetch initial data from Firebase or another API
-        // fetchPlantData();
-        // Danico don't forget to send the data to the data base and receive
-        // data 1 : temperature , humidit etc .
-        // data 2 : water level and water from sensor
-    }, []);
-
-    const handleLogout = async () => {
+    const handleSignOut = async () => {
         try {
             await signOut(auth);
+            Alert.alert('Success', 'You have been logged out.');
             router.push('Login')
-        } catch (error) {
-            Alert.alert('Logout Error', error.message);
+        } catch (error: any) {
+            Alert.alert('Sign Out Error', error.message);
         }
     };
 
-    const handleWaterPlant = () => {
-        // function to handle watering the plant
-        Alert.alert('Water Plant', `Watering the plant with ${waterAmount} amount.`);
-    };
-
-    const handleUpdatePlant = () => {
-        // function to update plant information
-        Alert.alert('Update Plant', `Updating plant name to ${plantName}.`);
+    const handleSendData = async () => {
+        try {
+            await set(ref(database, 'plantData/'), {
+                soilMoisture,
+                temperature,
+                wateringSchedule,
+                notificationsEnabled,
+            });
+            Alert.alert('Success', 'Data has been updated.');
+        } catch (error: any) {
+            Alert.alert('Update Error', error.message);
+        }
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>Plant Dashboard</Text>
-            <Text style={styles.sectionTitle}>Plant Information</Text>
-            <View style={styles.infoContainer}>
-                <Text style={styles.label}>Plant Name:</Text>
-                <TextInput
-                    style={styles.input}
-                    value={plantName}
-                    onChangeText={setPlantName}
-                    placeholder="Enter plant name"
-                />
-                <Text style={styles.label}>Plant Status:</Text>
-                <Text style={styles.status}>{plantStatus || 'No status available'}</Text>
+        <View style={styles.container}>
+            <View style={styles.header}>
+                <Text style={styles.title}>Plant Data</Text>
+                <TouchableOpacity onPress={handleSignOut} style={styles.logoutButton}>
+                    <Text style={styles.logoutButtonText}>Logout</Text>
+                </TouchableOpacity>
             </View>
-            <Text style={styles.sectionTitle}>Watering Controls</Text>
-            <View style={styles.controlContainer}>
-                <Text style={styles.label}>Amount of Water:</Text>
+
+            <View style={styles.dataSection}>
                 <TextInput
                     style={styles.input}
-                    value={waterAmount}
-                    onChangeText={setWaterAmount}
-                    placeholder="Enter amount of water"
+                    placeholder="Soil Moisture"
+                    value={soilMoisture}
+                    onChangeText={setSoilMoisture}
                     keyboardType="numeric"
                 />
-                <Button title="Water Plant" onPress={handleWaterPlant} />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Temperature"
+                    value={temperature}
+                    onChangeText={setTemperature}
+                    keyboardType="numeric"
+                />
+                <TextInput
+                    style={styles.input}
+                    placeholder="Watering Schedule"
+                    value={wateringSchedule}
+                    onChangeText={setWateringSchedule}
+                />
+                <View style={styles.switchContainer}>
+                    <Text style={styles.switchLabel}>Enable Notifications</Text>
+                    <Switch
+                        value={notificationsEnabled}
+                        onValueChange={setNotificationsEnabled}
+                    />
+                </View>
+                <TouchableOpacity onPress={handleSendData} style={styles.sendButton}>
+                    <Text style={styles.sendButtonText}>Send Data</Text>
+                </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.updateButton} onPress={handleUpdatePlant}>
-                <Text style={styles.updateButtonText}>Update Plant Info</Text>
-            </TouchableOpacity>
-            <Button title="Logout" onPress={handleLogout} />
-        </ScrollView>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
         padding: 20,
         backgroundColor: '#f5f5f5',
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 20,
     },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginVertical: 10,
-    },
-    infoContainer: {
-        width: '100%',
+    logoutButton: {
+        backgroundColor: '#d9534f',
         padding: 10,
-        backgroundColor: '#fff',
         borderRadius: 5,
-        marginBottom: 20,
-        borderWidth: 1,
-        borderColor: '#399918',
     },
-    controlContainer: {
-        width: '100%',
-        padding: 10,
-        backgroundColor: '#fff',
-        borderRadius: 5,
-        marginBottom: 20,
-        borderWidth: 1,
-        borderColor: '#399918   ',
-    },
-    label: {
-        fontSize: 16,
+    logoutButtonText: {
+        color: '#fff',
         fontWeight: 'bold',
-        marginBottom: 5,
+    },
+    dataSection: {
+        flex: 1,
+        justifyContent: 'center',
     },
     input: {
         width: '100%',
@@ -121,22 +117,26 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         marginBottom: 15,
         borderWidth: 1,
-        borderColor: '#399918',
+        borderColor: '#ddd',
     },
-    status: {
-        fontSize: 16,
-        marginBottom: 15,
-    },
-    updateButton: {
-        backgroundColor: '#399918',
-        borderRadius: 5,
-        padding: 10,
+    switchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
         marginBottom: 20,
     },
-    updateButtonText: {
-        color: '#fff',
+    switchLabel: {
+        marginRight: 10,
         fontSize: 16,
-        textAlign: 'center',
+    },
+    sendButton: {
+        backgroundColor: '#007BFF',
+        padding: 15,
+        borderRadius: 5,
+        alignItems: 'center',
+    },
+    sendButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
     },
 });
 

@@ -27,16 +27,16 @@ const CustomBottom = ({
 const styles = StyleSheet.create({
     button: {
 
-        width: 370,
+        width: 270,
         height: 50,
-        borderRadius: 7,
-        backgroundColor: '#399918',
+        borderRadius: 25,
+        backgroundColor: '#59CE8F',
         justifyContent: 'center',
         alignItems: 'center',
     },
     title: {
         fontSize: 18,
-        fontWeight: 'semibold',
+        fontWeight: 'bold',
         color: 'white'
     }
 });
