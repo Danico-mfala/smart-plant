@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Switch } from 'react-native';
 import { signOut } from 'firebase/auth';
 import { ref, set } from 'firebase/database';
-import { auth, database } from '../config/firebaseConfig'; // Ensure correct path
+import { auth, database } from '../../config/firebaseConfig'; // Ensure correct path
 import { router } from 'expo-router';
 
 const Plant = () => {
