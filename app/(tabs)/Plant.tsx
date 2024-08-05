@@ -1,27 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Switch, Image } from 'react-native';
 import { signOut } from 'firebase/auth';
 import { ref, set, onValue } from 'firebase/database';
 import { auth, database } from '../../config/firebaseConfig'; // Ensure correct path
 import { router } from 'expo-router';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import Feather from '@expo/vector-icons/Feather';
+
 
 const Plant = () => {
     const [soilMoisture, setSoilMoisture] = useState<number | null>(null);
-    const [temperature, setTemperature] = useState<string>('');
-    const [wateringSchedule, setWateringSchedule] = useState<string>(''); // e.g., 'daily', 'weekly'
-    const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(false);
+    const [temperature, setTemperature] = useState<number | null>(null);
+    const [humidity, setHumidity] = useState<number | null>(null);
     const [manualOverride, setManualOverride] = useState<string>('off');
     const [isOnline, setIsOnline] = useState<boolean>(false);
+
+    const SOIL_MOISTURE_THRESHOLD = 30; // Adjust the threshold as needed
 
     useEffect(() => {
         const soilMoistureRef = ref(database, 'Soil_Moisture_Sensor');
         const manualOverrideRef = ref(database, 'manual_override');
         const systemStatusRef = ref(database, 'system_status/online');
+        const weatherDataRef = ref(database, 'Weather_Data');
 
         const unsubscribeSoilMoisture = onValue(soilMoistureRef, (snapshot) => {
             const data = snapshot.val();
-            setSoilMoisture(data !== null ? Number(data) : null);
+            const moistureLevel = data !== null ? Number(data) : null;
+            setSoilMoisture(moistureLevel);
+
+            if (moistureLevel !== null && moistureLevel < SOIL_MOISTURE_THRESHOLD) {
+                handleManualOverride('on');
+            } else {
+                handleManualOverride('off');
+            }
         });
 
         const unsubscribeManualOverride = onValue(manualOverrideRef, (snapshot) => {
@@ -34,10 +46,19 @@ const Plant = () => {
             setIsOnline(data === true);
         });
 
+        const unsubscribeWeatherData = onValue(weatherDataRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                setTemperature(data.temperature || null);
+                setHumidity(data.humidity || null);
+            }
+        });
+
         return () => {
             unsubscribeSoilMoisture();
             unsubscribeManualOverride();
             unsubscribeSystemStatus();
+            unsubscribeWeatherData();
         };
     }, []);
 
@@ -54,7 +75,6 @@ const Plant = () => {
     const handleManualOverride = async (status: string) => {
         try {
             await set(ref(database, 'manual_override'), status);
-            Alert.alert('Success', `Motor turned ${status.toUpperCase()}`);
         } catch (error: any) {
             Alert.alert('Update Error', error.message);
         }
@@ -64,51 +84,90 @@ const Plant = () => {
         try {
             await set(ref(database, 'plantData/'), {
                 soilMoisture,
-                temperature,
-                wateringSchedule,
-                notificationsEnabled,
             });
-            Alert.alert('Success', 'Data has been updated.');
+            Alert.alert('Success', 'Data sent successfully');
         } catch (error: any) {
-            Alert.alert('Update Error', error.message);
+            Alert.alert('Data Send Error', error.message);
         }
     };
 
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Feather name="user" size={24} color="black" />
-                <Text style={styles.title}>Dashboard</Text>
+                <Text style={styles.title}>Smart Plant System</Text>
                 <TouchableOpacity onPress={handleSignOut} style={styles.logoutButton}>
-                    <Text style={styles.logoutButtonText}>Logout</Text>
+                    <Text style={styles.logoutButtonText}>Log Out</Text>
                 </TouchableOpacity>
             </View>
             <View style={styles.box}>
-                <Text style={styles.label}>Plant Status:</Text>
-                {soilMoisture !== null ? (
-                    <Text style={styles.data}>Soil Moisture: {soilMoisture.toFixed(2)}%</Text>
-                ) : (
-                    <Text style={styles.data}>Soil Moisture: Loading...</Text>
-                )}
-                <Text style={styles.data}>Temperature: {temperature || 'Loading...'}</Text>
-                <Text style={styles.data}>Watering Schedule: {wateringSchedule || 'Loading...'}</Text>
-                <View style={styles.switchContainer}>
-                    <Text style={styles.switchLabel}>Notifications Enabled:</Text>
-                    <Switch
-                        value={notificationsEnabled}
-                        onValueChange={setNotificationsEnabled}
-                    />
+                {/* <Text style={styles.label}>Soil Moisture:</Text>
+                <Text style={styles.data}>{soilMoisture !== null ? `${soilMoisture.toFixed(2)}%` : 'Loading...'}</Text> */}
+                <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text style={{ fontSize: 23 }}>Weatheer</Text>
+                    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10 }} >
+                        <Image source={require('../../assets/images/source/cloud.gif')} style={{ width: 80, height: 80 }} />
+                        <Text style={{ fontSize: 23, fontWeight: 'bold' }}>{temperature !== null ? `${temperature.toFixed(2)}°C` : 'Loading...'}</Text>
+                    </View>
                 </View>
-                <Text style={styles.data}>System Status: {isOnline ? 'Online' : 'Offline'}</Text>
-                <TouchableOpacity onPress={handleSendData} style={styles.sendButton}>
-                    <Text style={styles.sendButtonText}>Update Data</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleManualOverride('on')} style={styles.sendButton}>
-                    <Text style={styles.sendButtonText}>Turn Motor ON</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleManualOverride('off')} style={styles.sendButton}>
-                    <Text style={styles.sendButtonText}>Turn Motor OFF</Text>
-                </TouchableOpacity>
+                <View style={{ display: 'flex', flexDirection: 'row', gap: 20, marginTop: 10, justifyContent: 'center' }}>
+                    <View style={{ gap: 5 }}>
+
+                        <FontAwesome5 name="temperature-high" size={24} color="#399918" />
+                        <Text style={{}}>{temperature !== null ? `${temperature.toFixed(2)}°C` : 'Loading...'}</Text>
+                        <Text style={{ color: '#888' }}>Temperature</Text>
+                    </View>
+                    <View style={{ gap: 5 }}>
+
+                        <Ionicons name="water" size={24} color="#399918" />
+                        <Text style={{}}>{humidity !== null ? `${humidity.toFixed(2)}%` : 'Loading...'}</Text>
+                        <Text style={{ color: '#888' }}>Humidity</Text>
+                    </View>
+
+                    <View style={{ gap: 5 }}>
+                        <FontAwesome5 name="hand-holding-water" size={24} color="#399918" />
+                        <Text style={{}}>{soilMoisture !== null ? `${soilMoisture.toFixed(2)}%` : 'Loading...'}</Text>
+                        <Text style={{ color: '#888' }}>Soil Moisture</Text>
+                    </View>
+                    <View style={{ gap: 5 }}>
+                        <Feather name="wind" size={24} color="#399918" />
+                        <Text style={{}}>{soilMoisture !== null ? `${soilMoisture.toFixed(2)}%` : 'Loading...'}</Text>
+                        <Text style={{ color: '#888' }}>wind</Text>
+                    </View>
+
+                </View>
+
+
+            </View>
+
+
+
+            <View style={{ display: 'flex', flexDirection: 'row', marginTop: 20, width: 200, height: 200 }}>
+                <View>
+                    <Image source={require('../../assets/images/source/plant.jpg')} style={{ width: 180, height: 280 }} />
+                </View>
+                <View>
+                    <Text style={styles.label}>Soil Moisture:</Text>
+                    <Text style={styles.data}>{soilMoisture !== null ? `${soilMoisture.toFixed(2)}%` : 'Loading...'}</Text>
+
+                    <Text style={styles.label}>Temperature:</Text>
+                    <Text style={styles.data}>{temperature !== null ? `${temperature.toFixed(2)}°C` : 'Loading...'}</Text>
+
+                    <Text style={styles.label}>Humidity:</Text>
+                    <Text style={styles.data}>{humidity !== null ? `${humidity.toFixed(2)}%` : 'Loading...'}</Text>
+
+                    <Text style={styles.label}>Manual Override:</Text>
+                    <View style={styles.switchContainer}>
+                        <Text style={styles.switchLabel}>{manualOverride === 'on' ? 'Motor ON' : 'Motor OFF'}</Text>
+                        <Switch
+                            value={manualOverride === 'on'}
+                            onValueChange={(value) => handleManualOverride(value ? 'on' : 'off')}
+                        />
+                    </View>
+                </View>
+
+                {/* <TouchableOpacity onPress={handleSendData} style={styles.sendButton}>
+                    <Text style={styles.sendButtonText}>Send Data</Text>
+                </TouchableOpacity> */}
             </View>
         </View>
     );
