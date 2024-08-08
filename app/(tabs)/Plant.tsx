@@ -126,7 +126,18 @@ const Plant = () => {
                     <Text style={{ fontSize: 23 }}>Weather</Text>
                     <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10 }} >
                         <Image source={require('../../assets/images/source/cloud.gif')} style={{ width: 80, height: 80 }} />
-                        <Text style={{ fontSize: 23, fontWeight: 'bold' }}>{temperature !== null ? `${temperature}°C` : 'Loading...'}</Text>
+                        <Text style={{ fontSize: 23, fontWeight: 'bold' }}>
+                            {temperature !== null ? (
+                                <Text style={{ fontSize: 23, fontWeight: 'bold' }}>
+                                    {`${temperature}°C`}
+                                </Text>
+                            ) : (
+                                <Image
+                                    source={require('../../assets/images/source/loader.gif')}
+                                    style={{ width: 80, height: 80 }}
+                                />
+                            )}
+                        </Text>
                     </View>
                 </View>
                 <View style={{ display: 'flex', flexDirection: 'row', gap: 20, marginTop: 10, justifyContent: 'center' }}>
