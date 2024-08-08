@@ -16,6 +16,7 @@ const Plant = () => {
     const [isOnline, setIsOnline] = useState<boolean>(false);
     const [autoMode, setAutoMode] = useState<boolean>(true);
     const [pumpOn, setPumpOn] = useState<boolean>(false);
+    const [waterLevel, setWaterLevel] = useState<number | null>(null);
 
     const SOIL_MOISTURE_THRESHOLD = 30;
 
@@ -24,6 +25,7 @@ const Plant = () => {
         const manualOverrideRef = ref(database, 'manual_override');
         const systemStatusRef = ref(database, 'system_status/online');
         const weatherDataRef = ref(database, 'Weather_Data');
+        const waterLevelRef = ref(database, 'Water_Level_Sensor');
 
         const unsubscribeSoilMoisture = onValue(soilMoistureRef, (snapshot) => {
             const data = snapshot.val();
@@ -57,11 +59,18 @@ const Plant = () => {
             }
         });
 
+        const unsubscribeWaterLevel = onValue(waterLevelRef, (snapshot) => { // New listener for water level
+            const data = snapshot.val();
+            setWaterLevel(data !== null ? Math.round(Number(data)) : null);
+        });
+
+
         return () => {
             unsubscribeSoilMoisture();
             unsubscribeManualOverride();
             unsubscribeSystemStatus();
             unsubscribeWeatherData();
+            unsubscribeWaterLevel();
         };
     }, [autoMode]);
 
@@ -182,6 +191,10 @@ const Plant = () => {
                         <View>
                             <Text style={{ fontSize: 32, fontWeight: 'bold', marginTop: 20 }}>{humidity !== null ? `${humidity}%` : 'Loading...'}</Text>
                             <Text style={{ color: '#888', fontWeight: '400', }}>Humidity:</Text>
+                        </View>
+                        <View>
+                            <Text style={{ fontSize: 32, fontWeight: 'bold', marginTop: 20 }}>{waterLevel !== null ? `${waterLevel}%` : 'Loading...'}</Text>
+                            <Text style={{ color: '#888', fontWeight: '400', }}>Water Level:</Text>
                         </View>
                     </View>
                 </View>
