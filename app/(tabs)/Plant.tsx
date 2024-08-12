@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Switch, Image, Pressable } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Switch, Image, Pressable, ImageBackground } from 'react-native';
 import { signOut } from 'firebase/auth';
 import { ref, set, onValue } from 'firebase/database';
 import { auth, database } from '../../config/firebaseConfig'; // Ensure correct path
@@ -7,6 +7,8 @@ import { router } from 'expo-router';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Feather from '@expo/vector-icons/Feather';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import backgroundImage from '../../assets/images/source/back.png';
 
 const Plant = () => {
     const [soilMoisture, setSoilMoisture] = useState<number | null>(null);
@@ -122,80 +124,78 @@ const Plant = () => {
         }
     };
 
+
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.title}>Smart Plant System</Text>
+                <Text style={styles.title}>Hey,Danico</Text>
                 <TouchableOpacity onPress={handleSignOut} style={styles.logoutButton}>
-                    <Text style={styles.logoutButtonText}>Log Out</Text>
+                    {/* <Text style={styles.logoutButtonText}>
+                    </Text> */}
+                    <AntDesign name="logout" size={24} color="black" />
                 </TouchableOpacity>
             </View>
-            <View style={styles.box}>
-                <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Text style={{ fontSize: 23 }}>Weather</Text>
-                    <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10 }} >
-                        <Image source={require('../../assets/images/source/cloud.gif')} style={{ width: 80, height: 80 }} />
-                        <Text style={{ fontSize: 23, fontWeight: 'bold' }}>
-                            {temperature !== null ? (
-                                <Text style={{ fontSize: 23, fontWeight: 'bold' }}>
-                                    {`${temperature}°C`}
-                                </Text>
-                            ) : (
-                                <Image
-                                    source={require('../../assets/images/source/loader.gif')}
-                                    style={{ width: 80, height: 80 }}
-                                />
-                            )}
-                        </Text>
-                    </View>
-                </View>
+            <ImageBackground
+                source={backgroundImage}
+                style={styles.box}
+                resizeMode="cover"
+            >
+                <View style={styles.overlay} />
                 <View style={{ display: 'flex', flexDirection: 'row', gap: 20, marginTop: 10, justifyContent: 'center' }}>
-                    <View style={{ gap: 5 }}>
-                        <FontAwesome5 name="temperature-high" size={24} color="#399918" />
-                        <Text>{temperature !== null ? `${temperature}°C` : 'Loading...'}</Text>
-                        <Text style={{ color: '#888' }}>Temperature</Text>
+                    <View style={{ gap: 5, alignItems: 'center' }}>
+                        <FontAwesome5 name="temperature-high" size={28} color="#F4CE14" />
+                        <Text style={{ color: 'white', fontSize: 16 }}>{temperature !== null ? `${temperature}°C` : 'Loading...'}</Text>
+                        <Text style={{ color: 'white', fontWeight: '600', fontSize: 18 }}>Temperature</Text>
                     </View>
-                    <View style={{ gap: 5 }}>
-                        <Ionicons name="water" size={24} color="#399918" />
-                        <Text>{humidity !== null ? `${humidity}%` : 'Loading...'}</Text>
-                        <Text style={{ color: '#888' }}>Humidity</Text>
+                    <View style={{ gap: 5, alignItems: 'center' }}>
+                        <Ionicons name="water" size={28} color="#5DEBD7" />
+                        <Text style={{ color: 'white', fontSize: 16 }}>{humidity !== null ? `${humidity}%` : 'Loading...'}</Text>
+                        <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>Humidity</Text>
                     </View>
-                    <View style={{ gap: 5 }}>
-                        <FontAwesome5 name="hand-holding-water" size={24} color="#399918" />
-                        <Text>{soilMoisture !== null ? `${soilMoisture}%` : 'Loading...'}</Text>
-                        <Text style={{ color: '#888' }}>Soil Moisture</Text>
+                    <View style={{ gap: 5, alignItems: 'center' }}>
+                        <FontAwesome5 name="hand-holding-water" size={28} color="#C1F2B0" />
+                        <Text style={{ color: 'white', fontSize: 16 }}>{soilMoisture !== null ? `${soilMoisture}%` : 'Loading...'}</Text>
+                        <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>Soil Moisture</Text>
                     </View>
-                    <View style={{ gap: 5 }}>
-                        <Feather name="wind" size={24} color="#399918" />
-                        <Text>{soilMoisture !== null ? `${soilMoisture}%` : 'Loading...'}</Text>
-                        <Text style={{ color: '#888' }}>Wind</Text>
+                    <View style={{ gap: 5, alignItems: 'center' }}>
+                        <Feather name="wind" size={28} color="#279EFF" />
+                        <Text style={{ color: 'white', fontSize: 16 }}>{soilMoisture !== null ? `${soilMoisture}%` : 'Loading...'}</Text>
+                        <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>Wind</Text>
                     </View>
                 </View>
-            </View>
+            </ImageBackground>
+
+
 
             <View style={{ display: 'flex', flexDirection: 'row', marginTop: 25, width: 200, height: 200, gap: 10 }}>
                 <View>
-                    <Image source={require('../../assets/images/source/plant.png')} style={{ width: 200, height: 280 }} />
+                    <Image source={require('../../assets/images/source/plant.png')} style={{ width: 170, height: 280 }} />
                 </View>
                 <View>
                     <Text style={{ fontSize: 30, fontWeight: '800' }}>Your Plant</Text>
                     <View style={{ gap: 6, marginTop: 10 }}>
-                        <View>
-                            <Text style={{ fontSize: 32, fontWeight: 'bold', marginTop: 20 }}>{soilMoisture !== null ? `${soilMoisture}%` : 'Loading...'}</Text>
-                            <Text style={{ color: '#888', fontWeight: '400', }}>Soil Moisture:</Text>
+                        <View style={{ display: 'flex', flexDirection: 'row', gap: 10 }}>
+                            <View style={{ width: 100, height: 100, backgroundColor: '#FFF67E', padding: 4, borderRadius: 5 }}>
+                                <Text style={{ fontSize: 28, fontWeight: 'bold', marginTop: 20 }}>{soilMoisture !== null ? `${soilMoisture}%` : 'Loading...'}</Text>
+                                <Text style={{ color: '#888', fontWeight: '400', }}>Soil Moisture</Text>
+                            </View>
+                            <View style={{ width: 80, height: 100, backgroundColor: '#FFB996', padding: 4, borderRadius: 5 }}       >
+                                <Text style={{ fontSize: 32, fontWeight: 'bold', marginTop: 20 }}>{temperature !== null ? `${temperature}°C` : 'Loading...'}</Text>
+                                <Text style={{ color: 'white', fontWeight: '400', }}>Temperature</Text>
+                            </View>
                         </View>
-                        <View>
-                            <Text style={{ fontSize: 32, fontWeight: 'bold', marginTop: 20 }}>{temperature !== null ? `${temperature}°C` : 'Loading...'}</Text>
-                            <Text style={{ color: '#888', fontWeight: '400', }}>Temperature:</Text>
+                        <View style={{ display: 'flex', flexDirection: 'row', gap: 10 }}>
+                            <View style={{ width: 80, height: 100, backgroundColor: '#FFD23F', padding: 4, borderRadius: 5 }}>
+                                <Text style={{ fontSize: 28, fontWeight: 'bold', marginTop: 20 }}>{humidity !== null ? `${humidity}%` : 'Loading...'}</Text>
+                                <Text style={{ color: '#fff', fontWeight: '400', fontSize: 18 }}>Humidity</Text>
+                            </View>
+                            <View style={{ width: 100, height: 90, backgroundColor: '#40A2E3', padding: 4, borderRadius: 5, justifyContent: 'center', alignItems: 'center', gap: 5 }}>
+                                <Text style={{ fontSize: 23, fontWeight: 'bold', color: '#fff' }}>{waterLevel !== null ? `${waterLevel}%` : 'Loading...'}</Text>
+                                <Text style={{ color: '#fff', fontWeight: '400', fontSize: 18 }}>Water Level</Text>
+                            </View>
                         </View>
-                        <View>
-                            <Text style={{ fontSize: 32, fontWeight: 'bold', marginTop: 20 }}>{humidity !== null ? `${humidity}%` : 'Loading...'}</Text>
-                            <Text style={{ color: '#888', fontWeight: '400', }}>Humidity:</Text>
-                        </View>
-                        <View>
-                            <Text style={{ fontSize: 32, fontWeight: 'bold', marginTop: 20 }}>{waterLevel !== null ? `${waterLevel}%` : 'Loading...'}</Text>
-                            <Text style={{ color: '#888', fontWeight: '400', }}>Water Level:</Text>
-                        </View>
+
                     </View>
                 </View>
             </View>
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     logoutButton: {
-        backgroundColor: '#ff3d00',
+
         padding: 10,
         borderRadius: 5,
     },
@@ -257,15 +257,21 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     box: {
-        marginTop: 20,
-        padding: 15,
-        backgroundColor: '#f9f9f9',
+        marginTop: 25,
+        padding: 10,
         borderRadius: 10,
+
+        height: 100,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+    },
+    overlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        borderRadius: 10,
     },
     controlSection: {
         marginTop: 30,
@@ -275,19 +281,26 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
+        marginBottom: 20,
     },
     autoModeText: {
-        fontSize: 18,
+        fontSize: 20,
+        fontWeight: 'bold',
     },
     button: {
-        padding: 10,
+        width: 150,
+        height: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
         borderRadius: 5,
-        marginTop: 20,
     },
     buttonText: {
         color: '#fff',
         fontWeight: 'bold',
+        fontSize: 18,
     },
 });
+
+
 
 export default Plant;
