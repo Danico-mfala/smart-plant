@@ -19,6 +19,7 @@ const Plant = () => {
     const [autoMode, setAutoMode] = useState<boolean>(true);
     const [pumpOn, setPumpOn] = useState<boolean>(false);
     const [waterLevel, setWaterLevel] = useState<number | null>(null);
+    const [currentDate, setCurrentDate] = useState<string>('');
 
     const SOIL_MOISTURE_THRESHOLD = 30;
 
@@ -67,12 +68,32 @@ const Plant = () => {
         });
 
 
+        // Update current date and time every second
+        const updateDate = () => {
+            const now = new Date();
+            const months = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            const day = now.getDate();
+            const month = months[now.getMonth()];
+            const year = now.getFullYear();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            const dateStr = `${day} ${month} ${year} ${hours}:${minutes}:${seconds}`;
+            setCurrentDate(dateStr);
+        };
+        updateDate();
+        const dateInterval = setInterval(updateDate, 1000);
+
         return () => {
             unsubscribeSoilMoisture();
             unsubscribeManualOverride();
             unsubscribeSystemStatus();
             unsubscribeWeatherData();
             unsubscribeWaterLevel();
+            clearInterval(dateInterval);
         };
     }, [autoMode]);
 
@@ -129,10 +150,12 @@ const Plant = () => {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.title}>Hey,Danico</Text>
+                <View>
+                    <Text style={styles.title}>Hey, Danico</Text>
+                    <Text style={{ marginTop: 5, color: '#888' }}>{currentDate}</Text>
+                </View>
+
                 <TouchableOpacity onPress={handleSignOut} style={styles.logoutButton}>
-                    {/* <Text style={styles.logoutButtonText}>
-                    </Text> */}
                     <AntDesign name="logout" size={24} color="black" />
                 </TouchableOpacity>
             </View>
@@ -168,39 +191,150 @@ const Plant = () => {
 
 
 
-            <View style={{ display: 'flex', flexDirection: 'row', marginTop: 25, width: 200, height: 200, gap: 10 }}>
-                <View>
-                    <Image source={require('../../assets/images/source/plant.png')} style={{ width: 170, height: 280 }} />
+            <View style={{
+                flexDirection: 'row',
+                marginTop: 30,
+                padding: 20,
+                backgroundColor: '#e3f2fd',
+                borderRadius: 25,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 10 },
+                shadowOpacity: 0.2,
+                shadowRadius: 15,
+                elevation: 8,
+                alignItems: 'center'
+            }}>
+                <View style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}>
+                    <Image
+                        source={require('../../assets/images/source/plant.png')}
+                        style={{
+                            width: 180,
+                            height: 300,
+                            borderRadius: 20,
+                        }}
+                    />
                 </View>
-                <View>
-                    <Text style={{ fontSize: 30, fontWeight: '800' }}>Your Plant</Text>
-                    <View style={{ gap: 6, marginTop: 10 }}>
-                        <View style={{ display: 'flex', flexDirection: 'row', gap: 10 }}>
-                            <View style={{ width: 100, height: 100, backgroundColor: '#FFF67E', padding: 4, borderRadius: 5 }}>
-                                <Text style={{ fontSize: 28, fontWeight: 'bold', marginTop: 20 }}>{soilMoisture !== null ? `${soilMoisture}%` : 'Loading...'}</Text>
-                                <Text style={{ color: '#888', fontWeight: '400', }}>Soil Moisture</Text>
+
+                <View style={{
+                    flex: 1.5,
+                    paddingLeft: 25
+                }}>
+                    <Text style={{
+                        fontSize: 30,
+                        fontWeight: 'bold',
+                        color: '#2c3e50',
+                        marginBottom: 20
+                    }}>
+                        Your Plant
+                    </Text>
+
+                    <View style={{ gap: 20 }}>
+                        <View style={{ flexDirection: 'row', gap: 5 }}>
+                            <View style={{
+                                flex: 1,
+                                backgroundColor: '#c5e1a5',
+                                padding: 15,
+                                borderRadius: 10,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}>
+                                <Text style={{
+                                    fontSize: 26,
+                                    fontWeight: 'bold',
+                                    color: '#558b2f',
+                                }}>
+                                    {soilMoisture !== null ? `${soilMoisture}%` : 'Loading...'}
+                                </Text>
+                                <Text style={{
+                                    color: '#2c3e50',
+                                    fontSize: 10
+                                }}>
+                                    Soil Moisture
+                                </Text>
                             </View>
-                            <View style={{ width: 80, height: 100, backgroundColor: '#FFB996', padding: 4, borderRadius: 5 }}       >
-                                <Text style={{ fontSize: 32, fontWeight: 'bold', marginTop: 20 }}>{temperature !== null ? `${temperature}°C` : 'Loading...'}</Text>
-                                <Text style={{ color: 'white', fontWeight: '400', }}>Temperature</Text>
-                            </View>
-                        </View>
-                        <View style={{ display: 'flex', flexDirection: 'row', gap: 10 }}>
-                            <View style={{ width: 80, height: 100, backgroundColor: '#FFD23F', padding: 4, borderRadius: 5 }}>
-                                <Text style={{ fontSize: 28, fontWeight: 'bold', marginTop: 20 }}>{humidity !== null ? `${humidity}%` : 'Loading...'}</Text>
-                                <Text style={{ color: '#fff', fontWeight: '400', fontSize: 18 }}>Humidity</Text>
-                            </View>
-                            <View style={{ width: 100, height: 90, backgroundColor: '#40A2E3', padding: 4, borderRadius: 5, justifyContent: 'center', alignItems: 'center', gap: 5 }}>
-                                <Text style={{ fontSize: 23, fontWeight: 'bold', color: '#fff' }}>{waterLevel !== null ? `${waterLevel}%` : 'Loading...'}</Text>
-                                <Text style={{ color: '#fff', fontWeight: '400', fontSize: 18 }}>Water Level</Text>
+
+                            <View style={{
+                                flex: 1,
+                                backgroundColor: '#ffab91',
+                                padding: 15,
+                                borderRadius: 10,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}>
+                                <Text style={{
+                                    fontSize: 25,
+                                    fontWeight: 'bold',
+                                    color: '#d84315',
+                                }}>
+                                    {temperature !== null ? `${temperature}°C` : 'Loading...'}
+                                </Text>
+                                <Text style={{
+                                    color: '#2c3e50',
+                                    fontSize: 10
+                                }}>
+                                    Temperature
+                                </Text>
                             </View>
                         </View>
 
+                        <View style={{ flexDirection: 'row', gap: 5 }}>
+                            <View style={{
+                                flex: 1,
+                                backgroundColor: '#81d4fa',
+                                padding: 15,
+                                borderRadius: 10,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}>
+                                <Text style={{
+                                    fontSize: 26,
+                                    fontWeight: 'bold',
+                                    color: '#0277bd',
+                                }}>
+                                    {humidity !== null ? `${humidity}%` : 'Loading...'}
+                                </Text>
+                                <Text style={{
+                                    color: '#2c3e50',
+                                    fontSize: 13
+                                }}>
+                                    Humidity
+                                </Text>
+                            </View>
+
+                            <View style={{
+                                flex: 1,
+                                backgroundColor: '#ffe082',
+                                padding: 15,
+                                borderRadius: 10,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}>
+                                <Text style={{
+                                    fontSize: 25,
+                                    fontWeight: 'bold',
+                                    color: '#f57f17',
+                                }}>
+                                    {waterLevel !== null ? `${waterLevel}%` : 'Loading...'}
+                                </Text>
+                                <Text style={{
+                                    color: '#2c3e50',
+                                    fontSize: 10
+                                }}>
+                                    Water Level
+                                </Text>
+                            </View>
+                        </View>
                     </View>
                 </View>
             </View>
 
-            <View style={{ marginTop: 100 }}>
+
+
+            <View style={{ marginTop: 10 }}>
                 <Text style={{ fontSize: 28, fontWeight: '800' }}>Plant Care Tips</Text>
                 <Text style={{ fontSize: 18, marginTop: 10 }}>
                     Keep your plant hydrated and in a well-lit area. Monitor soil moisture and adjust watering as needed.
