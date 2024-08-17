@@ -46,7 +46,7 @@ const SignUp = () => {
                 <Image source={require('../assets/images/source/signUpImage.jpg')} style={styles.backgroundImage} />
                 <View style={styles.headerContent}>
                     <TouchableOpacity onPress={() => router.push("/")}>
-                        <Ionicons name="arrow-back" size={24} color="white" />
+                        <Ionicons name="arrow-back" size={24} color="#59CE8F" />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         justifyContent: "center",
         borderRadius: 50,
-        backgroundColor: '#59CE8F'
+        backgroundColor: '#fff'
     },
     formContainer: {
         flex: 1,
@@ -155,9 +155,9 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     title: {
-        fontSize: 28,
+        fontSize: 38,
         fontWeight: 'bold',
-        color: '#333',
+        color: '#59CE8F',
         marginBottom: 10,
         textAlign: 'center',
     },
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     loginLink: {
-        color: '#399918',
+        color: '#59CE8F',
         fontSize: 16,
     },
 });

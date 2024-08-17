@@ -1,14 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Switch, Image, Pressable, ImageBackground } from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+    Alert,
+    Switch,
+    Image,
+    Pressable,
+    ImageBackground
+} from 'react-native';
 import { signOut } from 'firebase/auth';
 import { ref, set, onValue } from 'firebase/database';
 import { auth, database } from '../../config/firebaseConfig'; // Ensure correct path
 import { router } from 'expo-router';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import Feather from '@expo/vector-icons/Feather';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import backgroundImage from '../../assets/images/source/back.png';
+import CircularProgress from 'react-native-circular-progress-indicator';
+import Feather from '@expo/vector-icons/Feather';
+// At the top of Plant.tsx or Plant.js
+import { sendWaterLevelNotification } from '../../utils/notifications';
+
 
 const Plant = () => {
     const [soilMoisture, setSoilMoisture] = useState<number | null>(null);
@@ -27,7 +41,7 @@ const Plant = () => {
         const soilMoistureRef = ref(database, 'Soil_Moisture_Sensor');
         const manualOverrideRef = ref(database, 'manual_override');
         const systemStatusRef = ref(database, 'system_status/online');
-        const weatherDataRef = ref(database, 'Weather_Data');
+        const weatherDataRef = ref(database, 'Temperature_Humidity_Data');
         const waterLevelRef = ref(database, 'Water_Level_Sensor');
 
         const unsubscribeSoilMoisture = onValue(soilMoistureRef, (snapshot) => {
@@ -62,13 +76,11 @@ const Plant = () => {
             }
         });
 
-        const unsubscribeWaterLevel = onValue(waterLevelRef, (snapshot) => { // New listener for water level
+        const unsubscribeWaterLevel = onValue(waterLevelRef, (snapshot) => {
             const data = snapshot.val();
             setWaterLevel(data !== null ? Math.round(Number(data)) : null);
         });
 
-
-        // Update current date and time every second
         const updateDate = () => {
             const now = new Date();
             const months = [
@@ -115,17 +127,6 @@ const Plant = () => {
         }
     };
 
-    const handleSendData = async () => {
-        try {
-            await set(ref(database, 'plantData/'), {
-                soilMoisture,
-            });
-            Alert.alert('Success', 'Data sent successfully');
-        } catch (error: any) {
-            Alert.alert('Data Send Error', error.message);
-        }
-    };
-
     const toggleAutoMode = async () => {
         const newMode = !autoMode;
         setAutoMode(newMode);
@@ -139,19 +140,17 @@ const Plant = () => {
     const handlePumpControl = async (status: boolean) => {
         try {
             await set(ref(database, 'manual_pump_status'), status ? 'on' : 'off');
-            setPumpOn(status); // Update local state
+            setPumpOn(status);
         } catch (error: any) {
             Alert.alert('Update Error', error.message);
         }
     };
 
-
-
     return (
         <View style={styles.container}>
             <View style={styles.header}>
                 <View>
-                    <Text style={styles.title}>Hey, Danico</Text>
+                    <Text style={styles.title}> <Feather name="user" size={24} color="black" /> Hey, Danico</Text>
                     <Text style={{ marginTop: 5, color: '#888' }}>{currentDate}</Text>
                 </View>
 
@@ -165,202 +164,147 @@ const Plant = () => {
                 resizeMode="cover"
             >
                 <View style={styles.overlay} />
-                <View style={{ display: 'flex', flexDirection: 'row', gap: 20, marginTop: 10, justifyContent: 'center' }}>
-                    <View style={{ gap: 5, alignItems: 'center' }}>
+                <View style={styles.sensorDataContainer}>
+                    <View style={styles.sensorItem}>
                         <FontAwesome5 name="temperature-high" size={28} color="#F4CE14" />
-                        <Text style={{ color: 'white', fontSize: 16 }}>{temperature !== null ? `${temperature}°C` : 'Loading...'}</Text>
-                        <Text style={{ color: 'white', fontWeight: '600', fontSize: 18 }}>Temperature</Text>
+                        <Text style={styles.sensorValue}>
+                            {temperature !== null ? `${temperature}°C` : 'Loading...'}
+                        </Text>
+                        <Text style={styles.sensorLabel}>Temperature</Text>
                     </View>
-                    <View style={{ gap: 5, alignItems: 'center' }}>
+                    <View style={styles.sensorItem}>
                         <Ionicons name="water" size={28} color="#5DEBD7" />
-                        <Text style={{ color: 'white', fontSize: 16 }}>{humidity !== null ? `${humidity}%` : 'Loading...'}</Text>
-                        <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>Humidity</Text>
+                        <Text style={styles.sensorValue}>
+                            {humidity !== null ? `${humidity}%` : 'Loading...'}
+                        </Text>
+                        <Text style={styles.sensorLabel}>Humidity</Text>
                     </View>
-                    <View style={{ gap: 5, alignItems: 'center' }}>
+                    <View style={styles.sensorItem}>
                         <FontAwesome5 name="hand-holding-water" size={28} color="#C1F2B0" />
-                        <Text style={{ color: 'white', fontSize: 16 }}>{soilMoisture !== null ? `${soilMoisture}%` : 'Loading...'}</Text>
-                        <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>Soil Moisture</Text>
-                    </View>
-                    <View style={{ gap: 5, alignItems: 'center' }}>
-                        <Feather name="wind" size={28} color="#279EFF" />
-                        <Text style={{ color: 'white', fontSize: 16 }}>{soilMoisture !== null ? `${soilMoisture}%` : 'Loading...'}</Text>
-                        <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>Wind</Text>
+                        <Text style={styles.sensorValue}>
+                            {soilMoisture !== null ? `${soilMoisture}%` : 'Loading...'}
+                        </Text>
+                        <Text style={styles.sensorLabel}>Soil Moisture</Text>
                     </View>
                 </View>
             </ImageBackground>
 
-
-
-            <View style={{
-                flexDirection: 'row',
-                marginTop: 30,
-                padding: 20,
-                backgroundColor: '#e3f2fd',
-                borderRadius: 25,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 10 },
-                shadowOpacity: 0.2,
-                shadowRadius: 15,
-                elevation: 8,
-                alignItems: 'center'
-            }}>
-                <View style={{
-                    flex: 1,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                }}>
+            <View style={styles.plantInfoContainer}>
+                <View style={styles.plantImageContainer}>
                     <Image
-                        source={require('../../assets/images/source/plant.png')}
-                        style={{
-                            width: 180,
-                            height: 300,
-                            borderRadius: 20,
-                        }}
+                        source={require('../../assets/images/source/home_1.jpg')}
+                        style={styles.plantImage}
                     />
                 </View>
 
-                <View style={{
-                    flex: 1.5,
-                    paddingLeft: 25
-                }}>
-                    <Text style={{
-                        fontSize: 30,
-                        fontWeight: 'bold',
-                        color: '#2c3e50',
-                        marginBottom: 20
-                    }}>
-                        Your Plant
+                <View style={styles.plantDetailsContainer}>
+                    <Text style={styles.plantTitle}>Your Plant's Status</Text>
+                    <Text style={styles.plantSubtitle}>
+                        Keep an eye on your plant's health with real-time data.
                     </Text>
 
-                    <View style={{ gap: 20 }}>
-                        <View style={{ flexDirection: 'row', gap: 5 }}>
-                            <View style={{
-                                flex: 1,
-                                backgroundColor: '#c5e1a5',
-                                padding: 15,
-                                borderRadius: 10,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                            }}>
-                                <Text style={{
-                                    fontSize: 26,
-                                    fontWeight: 'bold',
-                                    color: '#558b2f',
-                                }}>
-                                    {soilMoisture !== null ? `${soilMoisture}%` : 'Loading...'}
-                                </Text>
-                                <Text style={{
-                                    color: '#2c3e50',
-                                    fontSize: 10
-                                }}>
-                                    Soil Moisture
-                                </Text>
-                            </View>
+                    <View style={styles.circularProgressContainer}>
+                        <View style={styles.circularProgressRow}>
+                            <CircularProgress
+                                value={soilMoisture !== null ? soilMoisture : 0}
+                                maxValue={100}
+                                radius={50}
+                                valueSuffix="%"
+                                title="Soil Moisture"
+                                titleColor="#000"
+                                titleStyle={styles.circularProgressTitle}
+                                activeStrokeColor="#f39c12"
+                                inActiveStrokeColor="#F8C794"
+                                activeStrokeWidth={15}
+                                inActiveStrokeWidth={15}
+                            />
 
-                            <View style={{
-                                flex: 1,
-                                backgroundColor: '#ffab91',
-                                padding: 15,
-                                borderRadius: 10,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                            }}>
-                                <Text style={{
-                                    fontSize: 25,
-                                    fontWeight: 'bold',
-                                    color: '#d84315',
-                                }}>
-                                    {temperature !== null ? `${temperature}°C` : 'Loading...'}
-                                </Text>
-                                <Text style={{
-                                    color: '#2c3e50',
-                                    fontSize: 10
-                                }}>
-                                    Temperature
-                                </Text>
-                            </View>
+                            <CircularProgress
+                                value={temperature !== null ? temperature : 0}
+                                maxValue={100}
+                                radius={50}
+                                valueSuffix="%"
+                                title="Temperature"
+                                titleColor="#000"
+                                titleStyle={styles.circularProgressTitle}
+                                activeStrokeColor="#d84315"
+                                inActiveStrokeColor="#ffab91"
+                                activeStrokeWidth={15}
+                                inActiveStrokeWidth={15}
+                            />
+
+
                         </View>
 
-                        <View style={{ flexDirection: 'row', gap: 5 }}>
-                            <View style={{
-                                flex: 1,
-                                backgroundColor: '#81d4fa',
-                                padding: 15,
-                                borderRadius: 10,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                            }}>
-                                <Text style={{
-                                    fontSize: 26,
-                                    fontWeight: 'bold',
-                                    color: '#0277bd',
-                                }}>
-                                    {humidity !== null ? `${humidity}%` : 'Loading...'}
-                                </Text>
-                                <Text style={{
-                                    color: '#2c3e50',
-                                    fontSize: 13
-                                }}>
-                                    Humidity
-                                </Text>
-                            </View>
+                        <View style={styles.circularProgressRow}>
+                            <CircularProgress
+                                value={humidity !== null ? humidity : 0}
+                                maxValue={100}
+                                radius={50}
+                                valueSuffix="%"
+                                title="Humidity"
+                                titleColor="#000"
+                                titleStyle={styles.circularProgressTitle}
+                                activeStrokeColor="#1e88e5"
+                                inActiveStrokeColor="#bbdefb"
+                                activeStrokeWidth={15}
+                                inActiveStrokeWidth={15}
+                            />
 
-                            <View style={{
-                                flex: 1,
-                                backgroundColor: '#ffe082',
-                                padding: 15,
-                                borderRadius: 10,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                            }}>
-                                <Text style={{
-                                    fontSize: 25,
-                                    fontWeight: 'bold',
-                                    color: '#f57f17',
-                                }}>
-                                    {waterLevel !== null ? `${waterLevel}%` : 'Loading...'}
-                                </Text>
-                                <Text style={{
-                                    color: '#2c3e50',
-                                    fontSize: 10
-                                }}>
-                                    Water Level
-                                </Text>
-                            </View>
+                            <CircularProgress
+                                value={waterLevel !== null ? waterLevel : 0}
+                                maxValue={100}
+                                radius={50}
+                                valueSuffix="%"
+                                title="Water Level"
+                                titleColor="#000"
+                                titleStyle={styles.circularProgressTitle}
+                                activeStrokeColor="#43a047"
+                                inActiveStrokeColor="#a5d6a7"
+                                activeStrokeWidth={15}
+                                inActiveStrokeWidth={15}
+                            />
                         </View>
                     </View>
                 </View>
             </View>
 
+            <View style={styles.controlContainer}>
+                <Text style={styles.controlTitle}>Control</Text>
 
-
-            <View style={{ marginTop: 10 }}>
-                <Text style={{ fontSize: 28, fontWeight: '800' }}>Plant Care Tips</Text>
-                <Text style={{ fontSize: 18, marginTop: 10 }}>
-                    Keep your plant hydrated and in a well-lit area. Monitor soil moisture and adjust watering as needed.
-                </Text>
-            </View>
-
-            <View style={styles.controlSection}>
-                <View style={styles.autoModeContainer}>
-                    <Text style={styles.autoModeText}>Automatic Mode:</Text>
+                <View style={styles.switchContainer}>
+                    <Text style={styles.switchLabel}>Auto Mode</Text>
                     <Switch
                         value={autoMode}
                         onValueChange={toggleAutoMode}
-                        thumbColor={autoMode ? '#4CAF50' : '#f4f3f4'}
                         trackColor={{ false: '#767577', true: '#81b0ff' }}
+                        thumbColor={autoMode ? '#f5dd4b' : '#f4f3f4'}
                     />
                 </View>
 
-                {!autoMode && (
-                    <Pressable
-                        style={[styles.button, { backgroundColor: pumpOn ? '#f44336' : '#4CAF50' }]}
-                        onPressIn={() => handlePumpControl(true)}
-                        onPressOut={() => handlePumpControl(false)}
-                    >
-                        <Text style={styles.buttonText}>{pumpOn ? 'Pump On' : 'Pump Off'}</Text>
-                    </Pressable>
-                )}
+                <View style={styles.pumpControlContainer}>
+                    <Text style={styles.pumpLabel}>Manual Pump Control</Text>
+                    <View style={styles.pumpButtons}>
+                        <Pressable
+                            onPress={() => handlePumpControl(true)}
+                            style={[
+                                styles.pumpButton,
+                                pumpOn && styles.pumpButtonActive
+                            ]}
+                        >
+                            <Text style={styles.pumpButtonText}>On</Text>
+                        </Pressable>
+                        <Pressable
+                            onPress={() => handlePumpControl(false)}
+                            style={[
+                                styles.pumpButton,
+                                !pumpOn && styles.pumpButtonInactive
+                            ]}
+                        >
+                            <Text style={styles.pumpButtonText}>Off</Text>
+                        </Pressable>
+                    </View>
+                </View>
             </View>
         </View>
     );
@@ -369,72 +313,149 @@ const Plant = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
         backgroundColor: '#fff',
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        padding: 20,
+        backgroundColor: '#F9F9F9',
+        elevation: 2,
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
+        color: '#333',
     },
     logoutButton: {
-
-        padding: 10,
-        borderRadius: 5,
-    },
-    logoutButtonText: {
-        color: '#fff',
-        fontWeight: 'bold',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     box: {
-        marginTop: 25,
-        padding: 10,
-        borderRadius: 10,
-
-        height: 100,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        marginHorizontal: 20,
+        padding: 20,
+        borderRadius: 20,
+        marginVertical: 10,
+        elevation: 2,
+        backgroundColor: '#F9F9F9',
+        overflow: 'hidden',
     },
     overlay: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(0, 0, 0, 0.3)',
-        borderRadius: 10,
     },
-    controlSection: {
-        marginTop: 30,
-        alignItems: 'center',
-    },
-    autoModeContainer: {
+    sensorDataContainer: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        gap: 10,
-        marginBottom: 20,
     },
-    autoModeText: {
+    sensorItem: {
+        alignItems: 'center',
+    },
+    sensorValue: {
         fontSize: 20,
         fontWeight: 'bold',
+        marginTop: 10,
+        color: '#fff',
     },
-    button: {
-        width: 150,
-        height: 50,
+    sensorLabel: {
+        fontSize: 14,
+        color: '#ccc',
+        marginTop: 5,
+    },
+    plantInfoContainer: {
+        flexDirection: 'row',
+        marginVertical: 20,
+        paddingHorizontal: 20,
+    },
+    plantImageContainer: {
+        flex: 1,
+        width: 100,
+        height: 150,
+    },
+    plantImage: {
+        width: 'auto',
+        height: 270,
+        borderRadius: 10,
+    },
+    plantDetailsContainer: {
+        flex: 2,
+        marginLeft: 20,
+    },
+    plantTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 30,
+    },
+    plantSubtitle: {
+        fontSize: 16,
+        color: '#666',
+        marginBottom: 15,
+        marginTop: 5,
+    },
+    circularProgressContainer: {
+        flexDirection: 'column',
+    },
+    circularProgressRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 20,
+    },
+    circularProgressTitle: {
+        fontSize: 14,
+    },
+    controlContainer: {
+        marginVertical: 20,
+        paddingHorizontal: 20,
+    },
+    controlTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 10,
+    },
+    switchContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    switchLabel: {
+        fontSize: 16,
+        color: '#333',
+    },
+    pumpControlContainer: {
+        marginBottom: 20,
+    },
+    pumpLabel: {
+        fontSize: 16,
+        color: '#333',
+        marginBottom: 10,
+    },
+    pumpButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    pumpButton: {
+        flex: 1,
+        paddingVertical: 10,
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 5,
+        marginHorizontal: 5,
+        backgroundColor: '#e0e0e0',
     },
-    buttonText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 18,
+    pumpButtonText: {
+        fontSize: 16,
+        color: '#333',
+    },
+    pumpButtonActive: {
+        backgroundColor: '#81c784',
+    },
+    pumpButtonInactive: {
+        backgroundColor: '#e57373',
     },
 });
-
-
 
 export default Plant;

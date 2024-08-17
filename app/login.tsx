@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     signupLink: {
-        color: '#399918',
+        color: '#59CE8F',
         fontSize: 16,
     },
 });
