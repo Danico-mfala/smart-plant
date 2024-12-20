@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { signOut } from 'firebase/auth';
 import { ref, set, onValue } from 'firebase/database';
-import { auth, database } from '../../config/firebaseConfig'; // Ensure correct path
+import { auth, database } from '../../config/firebaseConfig';
 import { router } from 'expo-router';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -20,7 +20,7 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import backgroundImage from '../../assets/images/source/back.png';
 import CircularProgress from 'react-native-circular-progress-indicator';
 import Feather from '@expo/vector-icons/Feather';
-// At the top of Plant.tsx or Plant.js
+
 import { sendWaterLevelNotification } from '../../utils/notifications';
 
 
@@ -78,7 +78,13 @@ const Plant = () => {
 
         const unsubscribeWaterLevel = onValue(waterLevelRef, (snapshot) => {
             const data = snapshot.val();
-            setWaterLevel(data !== null ? Math.round(Number(data)) : null);
+            const level = data !== null ? Math.round(Number(data)) : null;
+            setWaterLevel(level);
+
+            // Check and send notification if the water level is low
+            if (level !== null) {
+                sendWaterLevelNotification(level);
+            }
         });
 
         const updateDate = () => {
@@ -153,7 +159,6 @@ const Plant = () => {
                     <Text style={styles.title}> <Feather name="user" size={24} color="black" /> Hey, Danico</Text>
                     <Text style={{ marginTop: 5, color: '#888' }}>{currentDate}</Text>
                 </View>
-
                 <TouchableOpacity onPress={handleSignOut} style={styles.logoutButton}>
                     <AntDesign name="logout" size={24} color="black" />
                 </TouchableOpacity>
@@ -190,14 +195,16 @@ const Plant = () => {
             </ImageBackground>
 
             <View style={styles.plantInfoContainer}>
+
                 <View style={styles.plantImageContainer}>
                     <Image
                         source={require('../../assets/images/source/home_1.jpg')}
+                        // source={require('../../assets/images/source/home.png')}
                         style={styles.plantImage}
                     />
                 </View>
-
                 <View style={styles.plantDetailsContainer}>
+
                     <Text style={styles.plantTitle}>Your Plant's Status</Text>
                     <Text style={styles.plantSubtitle}>
                         Keep an eye on your plant's health with real-time data.
@@ -370,12 +377,11 @@ const styles = StyleSheet.create({
     },
     plantImageContainer: {
         flex: 1,
-        width: 100,
-        height: 150,
+        marginTop: 150
     },
     plantImage: {
         width: 'auto',
-        height: 270,
+        height: 170,
         borderRadius: 10,
     },
     plantDetailsContainer: {
